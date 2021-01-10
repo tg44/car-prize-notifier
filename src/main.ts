@@ -22,7 +22,7 @@ Vue.use(vueCookies);
 Vue.use(firestorePlugin);
 const firebaseConfig = {
   apiKey: 'AIzaSyCDNZwCqBhn6w7r4FJrtB2M_Czrr4SYCds',
-  authDomain: 'car-prize-notifier.firebaseapp.com',
+  authDomain: 'gepkocsinyeremeny-emlekezteto.web.app',
   projectId: 'car-prize-notifier',
   storageBucket: 'car-prize-notifier.appspot.com',
   messagingSenderId: '891909311465',
