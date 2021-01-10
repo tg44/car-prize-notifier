@@ -1,17 +1,23 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
-  </div>
+  <v-container class="grey lighten-5">
+    <v-row no-gutters>
+      <v-col order="12">
+        <UserCard/>
+      </v-col>
+      <v-col>
+        Az oldal célja, hogy a felhasználóknak emailes értesítést adjon egy-egy <a href="https://www.otpbank.hu/portal/hu/Megtakaritas/ForintBetetek/Gepkocsinyeremeny" target="_blank">Gépkocsi nyereményj betét</a> sorsolás eredményéről!
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import HelloWorld from '@/components/HelloWorld.vue'; // @ is an alias to /src
+import UserCard from '@/components/UserCard.vue'; // @ is an alias to /src
 
 @Component({
   components: {
-    HelloWorld,
+    UserCard,
   },
 })
 export default class Home extends Vue {}

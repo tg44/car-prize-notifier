@@ -2,6 +2,8 @@ import Vue from 'vue';
 import Vuetify from 'vuetify/lib/framework';
 import hu from 'vuetify/src/locale/hu';
 
+import colors from 'vuetify/lib/util/colors';
+
 Vue.use(Vuetify);
 
 export default new Vuetify({
@@ -10,6 +12,15 @@ export default new Vuetify({
     current: 'hu',
   },
   icons: {
-    iconfont: 'fa',
+    iconfont: 'mdi',
+  },
+  theme: {
+    themes: {
+      light: {
+        primary: colors.lightGreen.darken4,
+        secondary: colors.lightGreen.base,
+        accent: colors.lightGreen.accent4,
+      },
+    },
   },
 });
