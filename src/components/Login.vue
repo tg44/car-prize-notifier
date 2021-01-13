@@ -119,7 +119,7 @@ export default Vue.extend({
   methods: {
     validate() {
       if (this.$refs.loginForm.validate()) {
-        firebase.auth().signInWithEmailAndPassword(this.email, this.password).then((user) => {
+        firebase.auth().signInWithEmailAndPassword(this.loginEmail, this.loginPassword).then((user) => {
           console.log(user);
           this.$router.replace('settings');
         }).catch((err) => {
@@ -128,6 +128,7 @@ export default Vue.extend({
       } else {
         firebase.auth().createUserWithEmailAndPassword(this.email, this.password).then((user) => {
           console.log(user);
+          firebase.auth().currentUser.sendEmailVerification();
           this.$router.replace('settings');
         }).catch((err) => {
           alert(`error: ${err.message}`);

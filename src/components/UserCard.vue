@@ -22,6 +22,11 @@
         </v-list-item-subtitle>
         <v-list-item-subtitle v-else class="mb-4">
           Email cím megeősítésre vár
+          <v-btn @click="resendMail"
+                 :loading="loading"
+                 :disabled="disabled">
+            {{ btnMsg }}
+          </v-btn>
         </v-list-item-subtitle>
       </v-list-item-content>
       <v-list-item-avatar>
@@ -39,6 +44,12 @@ import firebase from 'firebase';
 export default Vue.extend({
   name: 'UserCard',
 
+  data: () => ({
+    loading: false,
+    btnMsg: 'Email újraküldése',
+    disabled: false,
+  }),
+
   components: {
     Login,
   },
@@ -46,6 +57,19 @@ export default Vue.extend({
   computed: {
     isAuthenticated() {
       return firebase.auth().currentUser;
+    },
+  },
+  methods: {
+    resendMail() {
+      const user = firebase.auth().currentUser;
+      if (!user.emailVerified) {
+        this.disabled = true;
+        this.loading = true;
+        user.sendEmailVerification().then(() => {
+          this.loading = false;
+          this.btnMsg = 'Elküldve';
+        });
+      }
     },
   },
 });

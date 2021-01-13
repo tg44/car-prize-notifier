@@ -7,6 +7,8 @@
     >
       <div class="d-flex align-center">
         <v-btn
+          tile
+          elevation="0"
           color="secondary"
           to="/"
         >
@@ -67,13 +69,13 @@
     </v-bottom-sheet>
 
     <v-footer
-      dark
+      color="secondary"
       padless
     >
-      <v-btn to="/about">Adatvédelem</v-btn>
-      <v-btn href="https://github.com/tg44/car-prize-notifier" target="_blank">Github</v-btn>
+      <v-btn tile color="secondary" elevation="0" to="/about">Adatvédelem</v-btn>
+      <v-btn tile color="secondary" elevation="0" href="https://github.com/tg44/car-prize-notifier" target="_blank">Github</v-btn>
       <v-spacer></v-spacer>
-      Az oldal semmilyen jogi kapcsolatban nem áll az OTP Bank-al!
+      <div class="font-weight-medium white--text text-lg-body-1 pa-4">Az oldal semmilyen jogi kapcsolatban nem áll az OTP Bank-al!</div>
     </v-footer>
   </v-app>
 </template>
