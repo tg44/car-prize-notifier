@@ -61,14 +61,28 @@ async function fullLogic() {
   console.log('Send start to aws!')
   console.time('AWS')
 
-  await axios.post(awsUrl, { key: awsKey, message: returnData });
+  try {
+    await axios.post(awsUrl, {
+      key: awsKey,
+      message: returnData
+    });
+    console.timeEnd('AWS')
+    await axios.post(discordUrl, {
+      embeds: [{
+        title: `new draw successfully send - ${draw.drawNum} - ${draw.drawDate}`,
+      }],
+    });
+  } catch (e) {
+    console.timeEnd('AWS')
+    console.log(e)
+    await ref.delete()
+    await axios.post(discordUrl, {
+      embeds: [{
+        title: `new draw failed to send - ${draw.drawNum} - ${draw.drawDate}`,
+      }],
+    });
+  }
 
-  console.timeEnd('AWS')
-  await axios.post(discordUrl, {
-    embeds: [{
-      title: `new draw successfully send - ${draw.drawNum} - ${draw.drawDate}`,
-    }],
-  });
   return draw;
 }
 interface DataHelper {

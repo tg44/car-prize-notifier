@@ -8,25 +8,38 @@ exports.handler = async function (event) {
   let data;
   if (event.httpMethod === 'POST') {
     data = JSON.parse(event.body);
+  } else {
+    return resp({"success": false, "reason": "not a post"}, 400)
   }
   event = data
   if(!event || event.key !== process.env.API_KEY) {
-    return "Non maching api key!"
+    return resp({"success": false, "reason": "wrong api key"}, 401)
   }
 
   const stats = {
-    userNo: event.message.nonWinnerNo.length + event.message.winners.length,
+    userNo: event.message.nonWinnerNo + event.message.winners.length,
     tickets: event.message.tickets,
-    winnerNo: event.message.winnerTicketsNo,
+    winnerTicketsNo: event.message.winnerTicketsNo,
     winningNumbers: event.message.winningNumbers,
     drawNum: event.message.drawNum,
     drawDate: event.message.drawDate,
   }
 
+  console.log(stats);
+
   await mapAllSettled(event.message.winners, t => sendMessage(t, true, stats), 10);
   await mapAllSettled(event.message.nonWinners, t => sendMessage(t, false, stats), 10);
 
-  return '{"success": true}';
+  return resp({"success": true}, 200);
+}
+
+function resp(msg, statusCode = 200) {
+  return {
+    "statusCode": statusCode,
+    "headers": {},
+    "body": JSON.stringify(msg),
+    "isBase64Encoded": false
+  };
 }
 
 async function sendMessage(to, isWinner, stats) {

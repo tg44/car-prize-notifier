@@ -5,7 +5,7 @@ const ses = new aws.SES({region: process.env.AWS_REGION});
 const { performance } = require('perf_hooks');
 const sqs = new aws.SQS();
 const queueURL = process.env.QUEUE_URL;
-const nonsend = process.env.NON_SEND;
+const nonsend = process.env.NON_SEND === "true";
 
 const params = {
   AttributeNames: [
@@ -101,13 +101,12 @@ async function sendMail(to, isWinner, stats) {
         Data: title
       }
     },
-    Source: "noreply@tg44.win",
+    Source: '"Gepkocsi nyeremeny" <noreply@tg44.win>',
   };
   if(nonsend){
     console.log(`virtual send to ${to}`)
     return delay(100);
   } else {
-    return ses.sendEmail(params)
-      .promise();
+    return ses.sendEmail(params).promise();
   }
 }
