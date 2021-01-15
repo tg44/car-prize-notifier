@@ -35,55 +35,59 @@ exports.scheduledFunctionCrontab = functions
   .region('europe-west2')
   .runWith(runtimeOpts)
   .pubsub
-  .schedule('0 12 * * *')
+  .schedule('0 15 * * *')
   .timeZone('Europe/Budapest')
   .onRun(fullLogic);
 
 async function fullLogic() {
   // console.log(process.env)
-  const draw = await getWinners();
-  const ref = db.collection('draws').doc(String(draw.drawNum))
-  const doc = await ref.get()
-  if (doc.exists) {
-    console.log('Doc already found!')
-    return false
-  }
+  const draws = await getWinners();
+  await Promise.all(draws.map(async draw => {
+    const ref = db.collection('draws')
+      .doc(String(draw.drawNum))
+    const doc = await ref.get()
+    if (doc.exists) {
+      console.log(`Doc ${draw.drawNum} already found!`)
+      return false
+    }
 
-  await ref.set(draw)
-  const data = await gatherData(draw.winningNumbers)
-  const returnData: ReturnedData = { ...data, ...draw }
+    await ref.set(draw)
+    const data = await gatherData(draw.winningNumbers)
+    const returnData: ReturnedData = { ...data, ...draw }
 
-  await axios.post(discordUrl, {
-    embeds: [{
-      title: `new draw found sending to aws- ${draw.drawNum} - ${draw.drawDate}`,
-    }],
-  });
-  console.log('Send start to aws!')
-  console.time('AWS')
-
-  try {
-    await axios.post(awsUrl, {
-      key: awsKey,
-      message: returnData
-    });
-    console.timeEnd('AWS')
     await axios.post(discordUrl, {
       embeds: [{
-        title: `new draw successfully send - ${draw.drawNum} - ${draw.drawDate}`,
+        title: `new draw found sending to aws- ${draw.drawNum} - ${draw.drawDate}`,
       }],
     });
-  } catch (e) {
-    console.timeEnd('AWS')
-    console.log(e)
-    await ref.delete()
-    await axios.post(discordUrl, {
-      embeds: [{
-        title: `new draw failed to send - ${draw.drawNum} - ${draw.drawDate}`,
-      }],
-    });
-  }
+    console.log('Send start to aws!')
+    console.time('AWS')
 
-  return draw;
+    try {
+      await axios.post(awsUrl, {
+        key: awsKey,
+        message: returnData
+      });
+      console.timeEnd('AWS')
+      await axios.post(discordUrl, {
+        embeds: [{
+          title: `new draw successfully send - ${draw.drawNum} - ${draw.drawDate}`,
+        }],
+      });
+    } catch (e) {
+      console.timeEnd('AWS')
+      console.log(e)
+      await ref.delete()
+      await axios.post(discordUrl, {
+        embeds: [{
+          title: `new draw failed to send - ${draw.drawNum} - ${draw.drawDate}`,
+        }],
+      });
+    }
+    return 0;
+  }));
+
+  return draws;
 }
 interface DataHelper {
   tickets: number;
@@ -181,35 +185,40 @@ async function getWinners() {
   const url = 'https://www.otpbank.hu/portal/hu/Megtakaritas/ForintBetetek/Gepkocsinyeremeny';
   const response = await axios.get(url)
   const dom = new JSDOM(response.data);
-  const selector = dom.window.document.querySelector('section.mtxt-last')
-  const prices = [
-    ...selector?.querySelectorAll('li') || [],
-  ].map((e) => e.textContent);
-  const winners = prices.map((e) => {
-    const s = e?.split(' ') || '';
-    return Number(`${s[0]}${s[1]}`);
-  });
-  const headers = [
-    ...selector?.querySelectorAll('h4') || [],
-  ].map((e) => e.textContent);
-  // console.log(headers[0])
-  // console.log(headers[0].split('–'))
-  if(headers && headers.length > 0 && headers[0]) {
-    const drawDate = headers[0].split('–')[1].trim(); // '–' is not the same as '-' be careful!
-    const drawNum = Number(headers[0].split('.')[0]);
-    const ret = {
-      drawNum,
-      drawDate,
-      winningNumbers: winners
+  let selectors: Element[] = []
+  dom.window.document.querySelectorAll('section.mtxt').forEach((e) => selectors.push(e))
+  const out = selectors.map(selector => {
+    const prices = [
+      ...selector?.querySelectorAll('li') || [],
+    ].map((e) => e.textContent);
+    const winners = prices.map((e) => {
+      const s = e?.split(' ') || '';
+      return Number(`${s[0]}${s[1]}`);
+    });
+    const headers = [
+      ...selector?.querySelectorAll('h4') || [],
+    ].map((e) => e.textContent);
+    // console.log(headers[0])
+    // console.log(headers[0].split('–'))
+    if (headers && headers.length > 0 && headers[0]) {
+      const drawDate = headers[0].split('–')[1].trim(); // '–' is not the same as '-' be careful!
+      const drawNum = Number(headers[0].split('.')[0]);
+      const ret = {
+        drawNum,
+        drawDate,
+        winningNumbers: winners
+      }
+      console.log(ret);
+      return ret;
+    } else {
+      return {
+        drawNum: 0,
+        drawDate: '',
+        winningNumbers: [],
+      }
     }
-    console.log(ret);
-    return ret;
-  }
-  return {
-    drawNum: 0,
-    drawDate: '',
-    winningNumbers: [],
-  }
+  });
+  return out.filter(e => e.drawNum > 0)
 }
 
 /**
